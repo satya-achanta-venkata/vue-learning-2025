@@ -4,9 +4,10 @@
       <h1 class="text-3xl font-bold text-green-500 mb-6 text-center">
         Browse Jobs
       </h1>
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div v-if="state.isLoading">Loading....</div>
+      <div v-else class="grid grid-cols-1 gap-6 md:grid-cols-3">
         <JobListing
-          v-for="job in jobs.slice(0, limit)"
+          v-for="job in state.jobs.slice(0, limit)"
           :key="job.id"
           class="job-listing"
           :job="job"
@@ -24,12 +25,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from "vue";
+import { ref, defineProps, onMounted, reactive } from "vue";
 import { RouterLink } from "vue-router";
-import JobData from "@/jobs.json";
+import axios from "axios";
 import JobListing from "@/components/JobListing.vue";
 
-const jobs = ref(JobData);
+interface Job {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  type: string;
+  experience: string;
+  description: string;
+  requirements: string[];
+  tags: string[];
+  created_at: string;
+}
+
+const state = reactive({
+  isLoading: true,
+  jobs: [] as Job[],
+});
+
 defineProps({
   limit: {
     type: Number,
@@ -39,5 +58,16 @@ defineProps({
     type: Boolean,
     default: false,
   },
+});
+
+onMounted(async () => {
+  try {
+    const response = await axios.get("/api/jobs");
+    state.jobs = response.data;
+  } catch (error) {
+    console.error("Error fetching job listings:", error);
+  } finally {
+    state.isLoading = false;
+  }
 });
 </script>

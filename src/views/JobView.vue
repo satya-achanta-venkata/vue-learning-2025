@@ -76,6 +76,7 @@
             </RouterLink>
             <button
               class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block"
+              @click="deleteJob"
             >
               Delete Job
             </button>
@@ -89,10 +90,13 @@
 <script lang="ts" setup>
 import { reactive, onMounted } from "vue";
 import axios from "axios";
-import { useRoute, RouterLink } from "vue-router";
+import { useRoute, RouterLink, useRouter } from "vue-router";
 import BackButton from "@/components/BackButton.vue";
+import { useToast } from "vue-toastification";
 
 const route = useRoute();
+const router = useRouter();
+const toast = useToast();
 const jobId = route.params.id;
 const state = reactive({
   job: null as any,
@@ -106,6 +110,18 @@ const fetchJob = async () => {
     console.error("Error fetching job:", error);
   } finally {
     state.isLoading = false;
+  }
+};
+
+const deleteJob = async () => {
+  try {
+    await axios.delete(`/api/jobs/${jobId}`);
+    // Redirect to the jobs list or show a success message
+    toast.success("Job deleted successfully");
+    router.push("/jobs");
+  } catch (error) {
+    toast.error("Error deleting job");
+    console.error("Error deleting job:", error);
   }
 };
 
